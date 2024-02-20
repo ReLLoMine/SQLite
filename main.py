@@ -1,23 +1,17 @@
 import sqlite3
-from typing import List, Generator
+from typing import List, Generator, Any
 
 from loguru import logger
 from dataclasses import dataclass
 
+
 # (?:(?<=-)|(?<=^))\d{2,4}(?:(?=-)|(?=\s))|(?:(?<=\s)|(?<=:))\d{2}(?:(?=:)|(?=$))
 
 def entrywrapper(cls=None):
-
     def wrap(cls):
         pass
 
     return wrap(cls)
-
-
-class DataEntry:
-    def get_types(self):
-        for key in filter(lambda x: x.startswith("__"), self.__dict__.keys()):
-            yield type(self.__dict__[key])
 
 
 class Date:
@@ -29,9 +23,12 @@ class Date:
         self.minute = minute
         self.second = second
 
+        if [*self.__check_vals__()]:
+            raise ValueError
+
     @staticmethod
     def fromstr(string, format):
-        import re
+        pass
 
     def __str__(self):
         return f"{self.year}-{self.month:0>2}-{self.day:0>2} {self.hour:0>2}:{self.minute:0>2}:{self.second:0>2}"
@@ -44,7 +41,7 @@ class Date:
         else:
             return 1 <= self.day <= 30
 
-    def __check_vals__(self) -> Generator[str]:
+    def __check_vals__(self) -> Generator[str, None, None]:
         vals = {
             not 1000 <= self.year <= 9999: "year",
             not 1 <= self.month <= 12: "month",
@@ -56,6 +53,44 @@ class Date:
 
         for _, val in filter(lambda x: x[0], vals.items()):
             yield val
+
+
+class DataEntry:
+    __translate = {
+        str: "VARCHAR",
+        bool: "BOOL",
+        int: "INT",
+
+    }
+
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            if key in self.__get_py_keys() and type(value) in self.__get_py_types():
+                self.__dict__[key] = value
+            else:
+                raise TypeError(str([*self.__get_py_keys(), *self.__get_py_types()]))
+
+    def __str__(self):
+        return ", ".join(map(str, self))
+
+    def __iter__(self):
+        for key in self.__get_py_keys():
+            yield self.__dict__[key]
+
+    def get_sql_types(self):
+        pass
+
+    def get_names(self):
+        return [*self.__get_py_keys()]
+
+    def __get_py_keys(self):
+        for key, _ in filter(lambda x: not x[0].startswith("__") and not callable(x[1]),
+                             self.__class__.__dict__.items()):
+            yield key
+
+    def __get_py_types(self):
+        for key in self.__get_py_keys():
+            yield self.__class__.__dict__[key][0]
 
 
 class Entry(DataEntry):
@@ -94,7 +129,8 @@ class DBManager:
 
 
 def main():
-    pass
+    a = Entry(a=1, b="asd", c=Date(2001, 1, 1, 0, 0, 0))
+    print(a.get_names())
 
 
 if __name__ == '__main__':
