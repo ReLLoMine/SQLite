@@ -58,14 +58,11 @@ class SQLParams(Enum):
 
 
 class SQLTypes(Enum):
-    INT = "INT", int
-    BIGINT = "BIGINT", int
     INTEGER = "INTEGER", int
-    VARCHAR = "VARCHAR", str, "size"
+    TEXT = "TEXT", str
     BOOLEAN = "BOOLEAN", bool
-    FLOAT = "FLOAT", float, "p"
-    DOUBLE = "DOUBLE", float, "size", "d"
-    DATETIME = "DATETIME", Date
+    REAL = "REAL", float
+    DATE = "DATE", Date
 
     def sql_type(self):
         return str(self)
@@ -78,11 +75,10 @@ class SQLTypes(Enum):
 
 
 class Field:
-    def __init__(self, type: SQLTypes, *args: List[Any]):
+    def __init__(self, type: SQLTypes):
         self.__value = type.py_type()()
         self.type = type
         self.params: List[SQLParams] = []
-        self.args = list(args)
 
     def __add__(self, other):
         if type(other) is not SQLParams:
@@ -92,9 +88,8 @@ class Field:
         return self
 
     def __str__(self):
-        arguments = f"({', '.join(map(str, self.args))})" if self.args else ""
         params = " " + " ".join(map(str, self.params)) if self.params else ""
-        return f"{self.type.sql_type()}{arguments}{params}"
+        return f"{self.type.sql_type()}{params}"
 
     def __verify_type__(self, val):
         if type(val) is self.type.py_type():
@@ -108,34 +103,24 @@ class Field:
         return self.__value
 
 
-class INT(Field):
-    def __init__(self):
-        super().__init__(SQLTypes.INT)
-
-
-class BIGINT(Field):
-    def __init__(self):
-        super().__init__(SQLTypes.BIGINT)
-
-
 class INTEGER(Field):
     def __init__(self):
         super().__init__(SQLTypes.INTEGER)
 
 
-class DOUBLE(Field):
-    def __init__(self, size, d):
-        super().__init__(SQLTypes.DOUBLE, size, d)
+class REAL(Field):
+    def __init__(self):
+        super().__init__(SQLTypes.REAL)
 
 
-class FLOAT(Field):
-    def __init__(self, p):
-        super().__init__(SQLTypes.FLOAT, p)
+class TEXT(Field):
+    def __init__(self):
+        super().__init__(SQLTypes.TEXT)
 
 
-class DATETIME(Field):
-    def __init__(self, fsp):
-        super().__init__(SQLTypes.DATETIME, fsp)
+class DATE(Field):
+    def __init__(self):
+        super().__init__(SQLTypes.DATE)
 
 
 def d(v):
@@ -185,6 +170,7 @@ class Entry:
     def get_fields_on_create(cls):
         def args(val):
             return f"({', '.join(map(str, val.args))})" if val.args else ""
+
         return ",\n".join(f"{key} {str(val)}" for key, val in cls.__get_fields__().items())
 
     @classmethod
@@ -274,11 +260,6 @@ class DataEntry:
     def __get_py_types(cls, id_field=False):
         for _type in cls.__get_types(id_field):
             yield _type[0] if _type[0] != "ID" else int
-
-
-class A(Entry):
-    a = INT() + SQLParams.PRIMARY_KEY
-    b = DOUBLE(10, 5) + SQLParams.NOT_NULL
 
 
 class Table:

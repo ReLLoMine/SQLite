@@ -1,28 +1,28 @@
 import unittest
-import sql_lib
+import sqlite_lib as sql_lib
 
 
 class FieldTest(unittest.TestCase):
     def test_int(self):
-        instance = sql_lib.INT() + sql_lib.SQLParams.PRIMARY_KEY
-        self.assertEqual("INT PRIMARY KEY", str(instance))
+        instance = sql_lib.INTEGER() + sql_lib.SQLParams.PRIMARY_KEY
+        self.assertEqual("INTEGER PRIMARY KEY", str(instance))
 
     def test_double(self):
-        instance = sql_lib.DOUBLE(10, 5) + sql_lib.SQLParams.NOT_NULL
-        self.assertEqual("DOUBLE(10, 5) NOT NULL", str(instance))
+        instance = sql_lib.REAL() + sql_lib.SQLParams.NOT_NULL
+        self.assertEqual("REAL NOT NULL", str(instance))
 
     def test_date(self):
-        instance = sql_lib.DATETIME(6)
-        self.assertEqual("DATETIME(6)", str(instance))
+        instance = sql_lib.DATE()
+        self.assertEqual("DATE", str(instance))
 
 
 class EntryTest(unittest.TestCase):
     def test_set_get_attr(self):
         class A(sql_lib.Entry):
-            a = sql_lib.INT() + sql_lib.SQLParams.PRIMARY_KEY
-            b = sql_lib.DOUBLE(10, 5)
-            c = sql_lib.FLOAT(5)
-            d = sql_lib.DATETIME(6)
+            a = sql_lib.INTEGER() + sql_lib.SQLParams.PRIMARY_KEY
+            b = sql_lib.REAL()
+            c = sql_lib.REAL()
+            d = sql_lib.DATE()
 
         instance = A(a=10)
         instance.b = 15.
@@ -32,16 +32,16 @@ class EntryTest(unittest.TestCase):
         self.assertEqual(15., instance.b)
         self.assertEqual(10., instance.c)
         self.assertEqual("1970-01-01 00:00:00", str(instance.d))
-        self.assertEqual("a INT PRIMARY KEY,\nb DOUBLE(10, 5),\nc FLOAT(5),\nd DATETIME(6)",
+        self.assertEqual("a INTEGER PRIMARY KEY,\nb REAL,\nc REAL,\nd DATE",
                          instance.get_fields_on_create())
         self.assertEqual("a, b, c, d", instance.get_fields_on_select())
         self.assertEqual("b, c, d", instance.get_fields_on_insert())
 
     def test_set_vals(self):
         class A(sql_lib.Entry):
-            id = sql_lib.INT() + sql_lib.SQLParams.PRIMARY_KEY
-            a = sql_lib.INT()
-            b = sql_lib.INT()
+            id = sql_lib.INTEGER() + sql_lib.SQLParams.PRIMARY_KEY
+            a = sql_lib.INTEGER()
+            b = sql_lib.INTEGER()
 
         instance = A(a=1)
         self.assertEqual(0, instance.id)
@@ -65,22 +65,21 @@ class EntryTest(unittest.TestCase):
 class TableTest(unittest.TestCase):
     def test_init(self):
         class A(sql_lib.Entry):
-            id = sql_lib.INT() + sql_lib.SQLParams.PRIMARY_KEY
-            a = sql_lib.INT()
-            b = sql_lib.INT()
+            id = sql_lib.INTEGER() + sql_lib.SQLParams.PRIMARY_KEY
+            a = sql_lib.INTEGER()
+            b = sql_lib.INTEGER()
 
         table = sql_lib.Table("test", A)
 
         self.assertEqual(
-            "CREATE TABLE IF NOT EXISTS test (id INT PRIMARY KEY,\na INT,\nb INT)",
+            "CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY,\na INTEGER,\nb INTEGER)",
             table.init())
 
     def test_insert(self):
         class A(sql_lib.Entry):
-            id = sql_lib.INT() + sql_lib.SQLParams.PRIMARY_KEY
-            a = sql_lib.INT()
-            b = sql_lib.INT()
-            c = sql_lib.INTEGER()
+            id = sql_lib.INTEGER() + sql_lib.SQLParams.PRIMARY_KEY
+            a = sql_lib.INTEGER()
+            b = sql_lib.INTEGER()
 
         table = sql_lib.Table("test", A)
         entry = A().set_vals(1, 2, 3, primary_key=True)
