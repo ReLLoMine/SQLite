@@ -181,9 +181,8 @@ class Entry:
     def __iter__(self):
         return self.__values
 
-    @classmethod
-    def __str__(cls):
-        return cls.get_fields_on_create()
+    def __str__(self):
+        return ", ".join(map(lambda x: str(x), self.get_vals()))
 
     def __setattr__(self, key, value):
         if key in self.__get_fields__():

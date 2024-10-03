@@ -26,7 +26,7 @@ def main():
 
     # Получение всех пользователей
     for user in db.get_entries(User):
-        print(user.get_vals())
+        print(user)
 
 
 if __name__ == '__main__':
