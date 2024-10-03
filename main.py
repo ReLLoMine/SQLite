@@ -4,17 +4,29 @@ from typing import List, Generator, Any, Type, Dict, TypedDict
 
 from loguru import logger
 from dataclasses import dataclass
-import sql_lib
+from sqlite_lib import TEXT, DATE, DBManager, SQLParams, Table, Date, INTEGER, Entry
+
 
 # (?:(?<=-)|(?<=^))\d{2,4}(?:(?=-)|(?=\s))|(?:(?<=\s)|(?<=:))\d{2}(?:(?=:)|(?=$))
 
 
 def main():
-    raise NotImplemented
-    # entry = Entry(a=1, b="asvqV2", c=Date(2001, 1, 1, 0, 0, 0))
-    # table = Table("table1", Entry)
-    # db_mgr = DBManager("db.sqlite", [table])
-    # db_mgr.insert_entries([entry])
+    # Создание таблицы и записи
+    class User(Entry):
+        id = INTEGER() + SQLParams.PRIMARY_KEY + SQLParams.AUTOINCREMENT
+        username = TEXT()
+        created_at = DATE()
+
+    # Инициализация базы данных
+    db = DBManager('database.db', tables=[Table('users', User)])
+
+    # Добавление записи
+    user = User(username="john_doe", created_at=Date())
+    db.insert_entries([user])
+
+    # Получение всех пользователей
+    for user in db.get_entries(User):
+        print(user.get_vals())
 
 
 if __name__ == '__main__':

@@ -85,7 +85,7 @@ class Field:
         self.args = list(args)
 
     def __add__(self, other):
-        if type(other) is not SQLParams:
+        if other.name not in SQLParams.__members__:
             raise TypeError
 
         self.params.append(other)

@@ -86,7 +86,7 @@ class TableTest(unittest.TestCase):
 
         self.assertEqual(
             "INSERT INTO test (id, a, b) VALUES (1, 2, 3)",
-            table.insert_entry(entry, pk=True))
+            table.insert_entry(entry, primary_key=True))
 
 
 if __name__ == '__main__':

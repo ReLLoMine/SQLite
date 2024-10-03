@@ -22,7 +22,7 @@ class Date:
         raise NotImplemented
 
     def __str__(self):
-        return f"{self.year}-{self.month:0>2}-{self.day:0>2} {self.hour:0>2}:{self.minute:0>2}:{self.second:0>2}"
+        return f"\'{self.year}-{self.month:0>2}-{self.day:0>2} {self.hour:0>2}:{self.minute:0>2}:{self.second:0>2}\'"
 
     def __check_day__(self) -> bool:
         if self.month == 2:
@@ -62,7 +62,7 @@ class SQLTypes(Enum):
     TEXT = "TEXT", str
     BOOLEAN = "BOOLEAN", bool
     REAL = "REAL", float
-    DATE = "DATE", Date
+    DATE = "TEXT", Date
 
     def sql_type(self):
         return str(self)
@@ -81,7 +81,7 @@ class Field:
         self.params: List[SQLParams] = []
 
     def __add__(self, other):
-        if type(other) is not SQLParams:
+        if other.name not in SQLParams.__members__:
             raise TypeError
 
         self.params.append(other)
@@ -276,13 +276,13 @@ class Table:
     def init(self):
         return f"CREATE TABLE IF NOT EXISTS {self.title} ({self.__entry.get_fields_on_create()})"
 
-    def insert_entry(self, entry: Entry, pk=False):
+    def insert_entry(self, entry: Entry, primary_key=False):
         def _str(val):
             if type(val) in (Date, int, float):
                 return str(val)
             return "'" + str(val) + "'"
 
-        return f"INSERT INTO {self.title} ({entry.get_fields_on_insert(primary_key=pk)}) VALUES ({', '.join(map(_str, entry.get_vals(primary_key=pk)))})"
+        return f"INSERT INTO {self.title} ({entry.get_fields_on_insert(primary_key=primary_key)}) VALUES ({', '.join(map(_str, entry.get_vals(primary_key=primary_key)))})"
 
     def get_entries(self):
         return f"SELECT * FROM {self.title}"
@@ -298,6 +298,7 @@ class DBManager:
     def execute(self, sql, *args):
         logger.info(sql, *args)
         self.cursor.execute(sql, args)
+        self.__save_db()
 
     def get_entries(self, entry_type: Type[Entry]):
         table = self.tables[entry_type]
